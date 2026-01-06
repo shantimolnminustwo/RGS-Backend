@@ -1,4 +1,4 @@
- const Offer = require("../models/Offer");
+  const Offer = require("../models/Offer");
 const getLatLngFromAddress = require("../utils/getLatLngFromAddress");
 const path = require("path");
 const multer = require("multer");
@@ -68,4 +68,3 @@ exports.createOffer = async (req, res) => {
     res.status(400).json({ message: err.message });
   }
 };
-
