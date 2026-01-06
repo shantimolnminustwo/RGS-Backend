@@ -45,10 +45,7 @@ exports.createOffer = async (req, res) => {
     // Get lat/lng from address
     const location = await getLatLngFromAddress(address);
 
-const logoPath = req.file
-  ? `${process.env.BASE_URL}/uploads/${req.file.filename}`
-  : null;
-
+    const logoPath = req.file ? `/uploads/${req.file.filename}` : null;
 
     const offer = await Offer.create({
       brandName,
