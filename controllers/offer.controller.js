@@ -12,7 +12,17 @@ exports.getOffers = async (req, res) => {
     });
     console.log("USER FROM DB:", user);
 
-    const offers = await offersCollection.find({ isActive: true }).toArray();
+const now = new Date();
+
+
+    const offers = await offersCollection.find({
+      isActive: true,
+      $or: [
+        { expiryDate: { $gt: now } },
+        { expiryDate: { $exists: false } }
+      ]
+    }).toArray();
+
     console.log("OFFERS FROM DB:", offers);
 
     const bookmarked = user?.bookmarkedOffers?.map(id => id.toString()) || [];

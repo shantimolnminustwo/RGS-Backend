@@ -1,4 +1,5 @@
- const mongoose = require("mongoose");
+const User = require("../models/User");
+const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -13,9 +14,14 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "username and password required" });
     }
 
-    const user = await mongoose.connection
-      .collection("users")
-      .findOne({ username });
+   const user = await User.findOne({ username }).lean();
+
+console.log(
+  "USER FROM MONGOOSE MODEL:\n",
+  JSON.stringify(user, null, 2)
+);
+
+
 
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
@@ -28,30 +34,36 @@ exports.login = async (req, res) => {
 
     // 🔑 Access Token (15 minutes)
     const accessToken = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_ACCESS_SECRET,
-      { expiresIn: "15m" }
-    );
+  { userId: user._id, role: user.role },
+  process.env.JWT_ACCESS_SECRET,
+  { expiresIn: "15m" }
+);
 
-    // 🔁 Refresh Token (7 days)
-    const refreshToken = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_REFRESH_SECRET,
-      { expiresIn: "7d" }
-    );
+const refreshToken = jwt.sign(
+  { userId: user._id, role: user.role },
+  process.env.JWT_REFRESH_SECRET,
+  { expiresIn: "7d" }
+);
 
-    res.json({
-      message: "Login successful",
-      accessToken,
-      refreshToken,
-      user: {
-        id: user._id,
-        username: user.username
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
-  }
+
+   res.json({
+  message: "Login successful",
+  accessToken,
+  refreshToken,
+   user: {
+        id: user._id.toString(),   // convert ObjectId to string
+        username: user.username,
+        role: user.role || "user",          // ✅ now role will show
+      },
+});
+
+ } catch (error) {
+  console.error("LOGIN ERROR 👉", error);
+  res.status(500).json({
+    message: "Server error",
+    error: error.message
+  });
+}
 };
 
 /**
@@ -70,11 +82,12 @@ exports.refreshToken = async (req, res) => {
       process.env.JWT_REFRESH_SECRET
     );
 
-    const newAccessToken = jwt.sign(
-      { userId: decoded.userId },
-      process.env.JWT_ACCESS_SECRET,
-      { expiresIn: "15m" }
-    );
+   const newAccessToken = jwt.sign(
+  { userId: decoded.userId, role: decoded.role }, // include role
+  process.env.JWT_ACCESS_SECRET,
+  { expiresIn: "15m" }
+);
+
 
     res.json({ accessToken: newAccessToken });
   } catch (error) {

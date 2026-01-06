@@ -1,4 +1,4 @@
- const jwt = require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
 
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -16,6 +16,7 @@ const authMiddleware = (req, res, next) => {
     console.log("DECODED JWT:", decoded);
 
     req.userId = decoded.userId;
+    req.role = decoded.role; 
     next();
   } catch (error) {
     console.error("JWT VERIFY ERROR:", error.message);
