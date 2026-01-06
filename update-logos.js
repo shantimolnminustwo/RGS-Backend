@@ -1,33 +1,32 @@
-// update-logos.js
-import mongoose from "mongoose";
+ import mongoose from "mongoose";
 import dotenv from "dotenv";
-import Offer from "./models/Offer.js"; // adjust the path if needed
 
-dotenv.config(); // loads .env variables
+dotenv.config();
 
-const MONGO_URI = process.env.MONGO_URI || "your_mongo_connection_string_here";
+// Just pass the connection string; remove useNewUrlParser/useUnifiedTopology
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("Connected to MongoDB"))
+  .catch(err => console.error("MongoDB connection error:", err));
+
+const offerSchema = new mongoose.Schema({
+  logo: String
+});
+const Offer = mongoose.model("Offer", offerSchema);
 
 async function updateLogos() {
-  await mongoose.connect(MONGO_URI);
-  console.log("Connected to MongoDB");
-
-  const offers = await Offer.find();
-  for (let offer of offers) {
-    if (offer.logo.startsWith("http://localhost:5000")) {
+  const offers = await Offer.find({});
+  for (const offer of offers) {
+    if (offer.logo.includes("localhost:5000")) {
       offer.logo = offer.logo.replace(
         "http://localhost:5000",
         "https://rgs-backend.onrender.com"
       );
       await offer.save();
-      console.log(`Updated logo for offer ${offer._id}`);
+      console.log("Updated:", offer._id, offer.logo);
     }
   }
-
   console.log("All logos updated!");
-  await mongoose.disconnect();
+  mongoose.disconnect();
 }
 
-updateLogos().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+updateLogos();
