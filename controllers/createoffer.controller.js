@@ -1,25 +1,6 @@
-  const Offer = require("../models/Offer");
+ const Offer = require("../models/Offer");
 const getLatLngFromAddress = require("../utils/getLatLngFromAddress");
-const path = require("path");
-const multer = require("multer");
 
-// Multer setup
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/"); // make sure this folder exists
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, Date.now() + "-" + file.fieldname + ext);
-  },
-});
-
-const upload = multer({ storage });
-
-// Export middleware to use in route
-exports.uploadLogo = upload.single("logo");
-
-// Create offer controller
 exports.createOffer = async (req, res) => {
   try {
     const {
@@ -30,41 +11,50 @@ exports.createOffer = async (req, res) => {
       description,
       note,
       address,
-      expiryDate, // 👈 NEW
+      expiryDate,
     } = req.body;
 
     if (!brandName || !discount || !code || !address || !expiryDate) {
       return res.status(400).json({
-        message: "brandName, discount, code, address, expiryDate are required",
+        message:
+          "brandName, discount, code, address, expiryDate are required",
       });
     }
 
-    // Convert expiryDate to Date object
     const expiry = new Date(expiryDate);
 
-    // Get lat/lng from address
+    // 🔹 Geocode address
     const location = await getLatLngFromAddress(address);
 
-    const logoPath = req.file ? `/uploads/${req.file.filename}` : null;
+    // 🔹 Cloudinary/local image URL
+    const logo = req.file ? req.file.path : null;
 
     const offer = await Offer.create({
       brandName,
       discount,
       code,
-      nearYou,
+      nearYou: nearYou === true || nearYou === "true",
       description,
       note,
       address,
       lat: location.lat,
       lng: location.lng,
-      logo: logoPath,
-      expiryDate: expiry, // ✅ SAVE
+      logo,
+      expiryDate: expiry,
       createdBy: req.userId,
+      isActive: true,
     });
 
-    res.status(201).json({ message: "Offer created successfully", offer });
+    res.status(201).json({
+      message: "Offer created successfully",
+      offer,
+    });
   } catch (err) {
     console.error("CREATE OFFER ERROR 👉", err);
-    res.status(400).json({ message: err.message });
+    res.status(500).json({ 
+      message: err.message,
+      details: err.stack || err,
+      error: err // Send full error object for debugging
+    });
   }
 };
