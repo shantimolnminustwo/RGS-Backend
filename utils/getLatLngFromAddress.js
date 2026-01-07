@@ -1,4 +1,4 @@
- const axios = require("axios");
+const axios = require("axios");
 
 async function getLatLngFromAddress(address) {
   try {
@@ -28,8 +28,9 @@ async function getLatLngFromAddress(address) {
       lng: Number(data[0].lon),
     };
   } catch (err) {
-    // Log full error details for debugging
     console.error("Geocoding error:", err);
+    console.error("Error code:", err.code);
+    console.error("Error errno:", err.errno);
     if (err.response) {
       console.error("Response data:", err.response.data);
       console.error("Status:", err.response.status);

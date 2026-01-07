@@ -32,8 +32,6 @@ const offerSchema = new mongoose.Schema(
     note: { type: String },
     logo: { type: String },
     address: { type: String },
-    lat: { type: Number, required: true },
-    lng: { type: Number, required: true },
     isBookmarked: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
     nearYou: { type: Boolean, default: false },

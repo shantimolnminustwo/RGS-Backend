@@ -1,5 +1,4 @@
  const Offer = require("../models/Offer");
-const getLatLngFromAddress = require("../utils/getLatLngFromAddress");
 
 exports.createOffer = async (req, res) => {
   try {
@@ -23,10 +22,7 @@ exports.createOffer = async (req, res) => {
 
     const expiry = new Date(expiryDate);
 
-    // 🔹 Geocode address
-    const location = await getLatLngFromAddress(address);
-
-    // 🔹 Cloudinary/local image URL
+    // 🔹 Image URL (Cloudinary or local)
     const logo = req.file ? req.file.path : null;
 
     const offer = await Offer.create({
@@ -36,9 +32,7 @@ exports.createOffer = async (req, res) => {
       nearYou: nearYou === true || nearYou === "true",
       description,
       note,
-      address,
-      lat: location.lat,
-      lng: location.lng,
+      address, // ✅ ONLY THIS is needed for map
       logo,
       expiryDate: expiry,
       createdBy: req.userId,
@@ -50,11 +44,9 @@ exports.createOffer = async (req, res) => {
       offer,
     });
   } catch (err) {
-    console.error("CREATE OFFER ERROR 👉", err);
-    res.status(500).json({ 
-      message: err.message,
-      details: err.stack || err,
-      error: err // Send full error object for debugging
+    console.error("CREATE OFFER ERROR 👉", err.message);
+    res.status(500).json({
+      message: "Offer creation failed",
     });
   }
 };
